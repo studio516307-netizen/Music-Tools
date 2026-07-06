@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>音樂小工具 - 互動樂理大師</title>
-    <meta name="description" content="集合互動五度圈、順階和弦速查、逆向和弦定調、專業網頁拍子機的綜合音樂小工具。">
+    <meta name="description" content="集合互動五度圈、順階和弦速查、專業網頁拍子機的綜合音樂小工具。">
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -18,13 +18,12 @@
     
     <header class="bg-indigo-600 text-white text-center py-4 shadow-md">
         <h1 class="text-xl font-bold tracking-wider">🎵 音樂小工具</h1>
-        <p class="text-xs text-indigo-200 mt-1">五度圈 & 和弦速查 & 絕對定調 & 拍子機</p>
+        <p class="text-xs text-indigo-200 mt-1">五度圈 & 和弦速查 & 拍子機</p>
     </header>
 
-    <div class="flex border-b border-gray-200 bg-gray-50 text-center text-[11px] font-bold">
+    <div class="flex border-b border-gray-200 bg-gray-50 text-center text-sm font-bold">
         <button @click="changeTab('circle')" :class="['flex-1 py-3 transition-all border-b-2', currentTab === 'circle' ? 'border-indigo-600 text-indigo-600 bg-white' : 'border-transparent text-gray-500']">⭕ 五度圈</button>
         <button @click="changeTab('chords')" :class="['flex-1 py-3 transition-all border-b-2', currentTab === 'chords' ? 'border-indigo-600 text-indigo-600 bg-white' : 'border-transparent text-gray-500']">🎼 順階和弦</button>
-        <button @click="changeTab('detector')" :class="['flex-1 py-3 transition-all border-b-2', currentTab === 'detector' ? 'border-indigo-600 text-indigo-600 bg-white' : 'border-transparent text-gray-500']">🔍 和弦定調</button>
         <button @click="changeTab('metronome')" :class="['flex-1 py-3 transition-all border-b-2', currentTab === 'metronome' ? 'border-indigo-600 text-indigo-600 bg-white' : 'border-transparent text-gray-500']">🥁 拍子機</button>
     </div>
 
@@ -68,49 +67,12 @@
             <section>
                 <h3 class="text-sm font-bold text-gray-800 mb-2">✨ {{ selectedRootChord }}{{ isMajorChord ? '大調' : '自然小調' }}順階和弦</h3>
                 <div class="space-y-1.5">
-                    <div v-for="(chord, index) in detailedChordsForView" :key="index" class="flex items-center justify-between bg-gray-50 p-2.5 rounded-xl border border-gray-200/60">
+                    <div v-for="(chord, index) in currentChords" :key="index" class="flex items-center justify-between bg-gray-50 p-2.5 rounded-xl border border-gray-200/60">
                         <div class="flex items-center space-x-2">
                             <span :class="['w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold', isMajorChord ? 'bg-emerald-100 text-emerald-800' : 'bg-purple-100 text-purple-800']">{{ chord.roman }}</span>
                             <div><div class="font-bold text-gray-800 text-sm">{{ chord.name }}</div><div class="text-[9px] text-gray-400">{{ chord.type }}</div></div>
                         </div>
                         <div class="text-xs font-semibold text-gray-500 bg-white px-2 py-0.5 rounded border border-gray-100">{{ chord.notes.join(' · ') }}</div>
-                    </div>
-                </div>
-            </section>
-        </div>
-
-        <div v-if="currentTab === 'detector'">
-            <section class="mb-4">
-                <label class="text-xs font-bold text-gray-500 block mb-1.5">請輸入歌譜中的和弦 (用英文逗號隔開)：</label>
-                <input type="text" v-model="userInputChords" placeholder="例如: A, Am" 
-                       class="w-full p-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm shadow-sm transition-all" />
-                <p class="text-[11px] text-gray-400 mt-1">🚫 嚴格對齊順階和弦表：互斥和弦（如 A 與 Am）將會直接查無結果</p>
-            </section>
-            <section>
-                <div class="flex justify-between items-center mb-2">
-                    <h3 class="text-sm font-bold text-gray-800">🔍 精準調性判定結果 (必須 100% 完全符合)</h3>
-                    <button @click="userInputChords = ''" class="text-xs text-red-500 hover:underline">清空</button>
-                </div>
-                <div v-if="cleanedInputChords.length === 0" class="text-center py-8 text-gray-400 text-xs bg-gray-50 rounded-xl border border-dashed border-gray-200">
-                    請在上方輸入和弦，系統將為您篩選符合的調性
-                </div>
-                <div v-else-if="detectedKeys.length === 0" class="text-center py-8 text-red-400 text-xs bg-red-50 rounded-xl border border-dashed border-red-200 font-medium">
-                    ⚠️ 找不到 100% 包含這些和弦的單一調性（存在順階互斥和弦）
-                </div>
-                <div v-else class="space-y-2">
-                    <div v-for="(result, index) in detectedKeys" :key="index" class="bg-white border border-indigo-200 rounded-xl p-3.5 shadow-sm">
-                        <div class="flex justify-between items-center">
-                            <span :class="['px-2.5 py-1 text-sm font-bold rounded-lg', result.isMajor ? 'bg-emerald-100 text-emerald-800' : 'bg-purple-100 text-purple-800']">
-                                {{ result.keyName }}
-                            </span>
-                            <div class="text-xs font-bold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full flex items-center">
-                                <span>✓ 100% 完全符合</span>
-                            </div>
-                        </div>
-                        <div class="text-[11px] text-gray-500 mt-2 bg-gray-50 p-2 rounded-lg border border-gray-100">
-                            <span class="font-medium text-gray-500">該調包含你輸入的：</span> 
-                            <span class="font-bold text-gray-800">{{ result.matched.join(', ') }}</span>
-                        </div>
                     </div>
                 </div>
             </section>
@@ -160,7 +122,7 @@
 
     createApp({
         setup() {
-            const currentTab = ref('detector'); // 預設打開在定調工具
+            const currentTab = ref('circle'); // 預設打開在五度圈
 
             // --- 1. 五度圈基礎資料 ---
             const keysCircle = [
@@ -188,141 +150,34 @@
                 return { transform: `translate(${Math.round(radius * Math.cos(angle))}px, ${Math.round(radius * Math.sin(angle))}px)` };
             };
 
-            // --- 2. 嚴格限定、絕不重合的精準順階和弦表字典 ---
+            // --- 2. 順階和弦字典庫 ---
             const chordsData = {
-                'C': {
-                    major: ['C', 'Dm', 'Em', 'F', 'G', 'Am', 'Bdim', 'Cmaj7', 'Dm7', 'Em7', 'Fmaj7', 'G7', 'Am7', 'Bm7b5'],
-                    minor: ['Cm', 'Ddim', 'E♭', 'Fm', 'Gm', 'A♭', 'B♭', 'Cm7', 'Ddim7', 'E♭maj7', 'Fm7', 'Gm7', 'A♭maj7', 'B♭7', 'Eb', 'Ab', 'Bb']
-                },
-                'G': {
-                    major: ['G', 'Am', 'Bm', 'C', 'D', 'Em', 'F#dim', 'Gmaj7', 'Am7', 'Bm7', 'Cmaj7', 'D7', 'Em7', 'F#m7b5'],
-                    minor: ['Gm', 'Adim', 'B♭', 'Cm', 'Dm', 'E♭', 'F', 'Gm7', 'Adim7', 'B♭maj7', 'Cm7', 'Dm7', 'E♭maj7', 'F7', 'Bb', 'Eb']
-                },
-                'D': {
-                    major: ['D', 'Em', 'F#m', 'G', 'A', 'Bm', 'C#dim', 'Dmaj7', 'Em7', 'F#m7', 'Gmaj7', 'A7', 'Bm7', 'C#m7b5'],
-                    minor: ['Dm', 'Edim', 'F', 'Gm', 'Am', 'B♭', 'C', 'Dm7', 'Edim7', 'Fmaj7', 'Gm7', 'Am7', 'B♭maj7', 'C7', 'Bb']
-                },
-                'A': {
-                    major: ['A', 'Bm', 'C#m', 'D', 'E', 'F#m', 'G#dim', 'Amaj7', 'Bm7', 'C#m7', 'Dmaj7', 'E7', 'F#m7', 'G#m7b5'],
-                    minor: ['Am', 'Bdim', 'C', 'Dm', 'Em', 'F', 'G', 'Am7', 'Bdim7', 'Cmaj7', 'Dm7', 'Em7', 'Fmaj7', 'G7']
-                },
-                'E': {
-                    major: ['E', 'F#m', 'G#m', 'A', 'B', 'C#m', 'D#dim', 'Emaj7', 'F#m7', 'G#m7', 'Amaj7', 'B7', 'C#m7', 'D#m7b5'],
-                    minor: ['Em', 'F#dim', 'G', 'Am', 'Bm', 'C', 'D', 'Em7', 'F#dim7', 'Gmaj7', 'Am7', 'Bm7', 'Cmaj7', 'D7']
-                },
-                'B': {
-                    major: ['B', 'C#m', 'D#m', 'E', 'F#', 'G#m', 'A#dim', 'Bmaj7', 'C#m7', 'D#m7', 'Emaj7', 'F#7', 'G#m7', 'A#m7b5'],
-                    minor: ['Bm', 'C#dim', 'D', 'Em', 'F#m', 'G', 'A', 'Bm7', 'C#dim7', 'Dmaj7', 'Em7', 'F#m7', 'Gmaj7', 'A7']
-                },
-                'F#': {
-                    major: ['F#', 'G#m', 'A#m', 'B', 'C#', 'D#m', 'E#dim', 'F#maj7', 'G#m7', 'A#m7', 'Bmaj7', 'C#7', 'D#m7', 'E#m7b5', 'Gb', 'Abm', 'Bbm', 'Db', 'Ebm'],
-                    minor: ['F#m', 'G#dim', 'A', 'Bm', 'C#m', 'D', 'E', 'F#m7', 'G#dim7', 'Amaj7', 'Bm7', 'C#m7', 'Dmaj7', 'E7', 'Gbm', 'Abdim']
-                },
-                'D♭': {
-                    major: ['D♭', 'E♭m', 'Fm', 'G♭', 'A♭', 'B♭m', 'Cdim', 'D♭maj7', 'E♭m7', 'Fm7', 'G♭maj7', 'A♭7', 'B♭m7', 'Cm7b5', 'Db', 'Ebm', 'Gb', 'Ab', 'Bbm'],
-                    minor: ['B♭m', 'Cdim', 'D♭', 'E♭m', 'Fm', 'G♭', 'A♭', 'B♭m7', 'Cdim7', 'D♭maj7', 'E♭m7', 'Fm7', 'G♭maj7', 'A♭7', 'Bbm', 'Db', 'Ebm', 'Gb', 'Ab']
-                },
-                'A♭': {
-                    major: ['A♭', 'B♭m', 'Cm', 'D♭', 'E♭', 'Fm', 'Gdim', 'A♭maj7', 'B♭m7', 'Cm7', 'D♭maj7', 'E♭7', 'Fm7', 'Gm7b5', 'Ab', 'Bbm', 'Db', 'Eb'],
-                    minor: ['Fm', 'Gdim', 'A♭', 'B♭m', 'Cm', 'D♭', 'E♭', 'Fm7', 'Gdim7', 'A♭maj7', 'B♭m7', 'Cm7', 'D♭maj7', 'E♭7', 'Ab', 'Bbm', 'Db', 'Eb']
-                },
-                'E♭': {
-                    major: ['E♭', 'Fm', 'Gm', 'A♭', 'B♭', 'Cm', 'Ddim', 'E♭maj7', 'Fm7', 'Gm7', 'A♭maj7', 'B♭7', 'Cm7', 'Dm7b5', 'Eb', 'Ab', 'Bb'],
-                    minor: ['Cm', 'Ddim', 'E♭', 'Fm', 'Gm', 'A♭', 'B♭', 'Cm7', 'Ddim7', 'E♭maj7', 'Fm7', 'Gm7', 'A♭maj7', 'B♭7', 'Eb', 'Ab', 'Bb']
-                },
-                'B♭': {
-                    major: ['B♭', 'Cm', 'Dm', 'E♭', 'F', 'Gm', 'Adim', 'B♭maj7', 'Cm7', 'Dm7', 'E♭maj7', 'F7', 'Gm7', 'Am7b5', 'Bb', 'Eb'],
-                    minor: ['Gm', 'Adim', 'B♭', 'Cm', 'Dm', 'E♭', 'F', 'Gm7', 'Adim7', 'B♭maj7', 'Cm7', 'Dm7', 'E♭maj7', 'F7', 'Bb', 'Eb']
-                },
-                'F': {
-                    major: ['F', 'Gm', 'Am', 'B♭', 'C', 'Dm', 'Edim', 'Fmaj7', 'Gm7', 'Am7', 'B♭maj7', 'C7', 'Dm7', 'Em7b5', 'Bb'],
-                    minor: ['Dm', 'Edim', 'F', 'Gm', 'Am', 'B♭', 'C', 'Dm7', 'Edim7', 'Fmaj7', 'Gm7', 'Am7', 'B♭maj7', 'C7', 'Bb']
-                }
+                'C': { major: ['C', 'Dm', 'Em', 'F', 'G', 'Am', 'Bdim'], minor: ['Cm', 'Ddim', 'E♭', 'Fm', 'Gm', 'A♭', 'B♭'] },
+                'G': { major: ['G', 'Am', 'Bm', 'C', 'D', 'Em', 'F#dim'], minor: ['Gm', 'Adim', 'B♭', 'Cm', 'Dm', 'E♭', 'F'] },
+                'D': { major: ['D', 'Em', 'F#m', 'G', 'A', 'Bm', 'C#dim'], minor: ['Dm', 'Edim', 'F', 'Gm', 'Am', 'B♭', 'C'] },
+                'A': { major: ['A', 'Bm', 'C#m', 'D', 'E', 'F#m', 'G#dim'], minor: ['Am', 'Bdim', 'C', 'Dm', 'Em', 'F', 'G'] },
+                'E': { major: ['E', 'F#m', 'G#m', 'A', 'B', 'C#m', 'D#dim'], minor: ['Em', 'F#dim', 'G', 'Am', 'Bm', 'C', 'D'] },
+                'B': { major: ['B', 'C#m', 'D#m', 'E', 'F#', 'G#m', 'A#dim'], minor: ['Bm', 'C#dim', 'D', 'Em', 'F#m', 'G', 'A'] },
+                'F#': { major: ['F#', 'G#m', 'A#m', 'B', 'C#', 'D#m', 'E#dim'], minor: ['F#m', 'G#dim', 'A', 'Bm', 'C#m', 'D', 'E'] },
+                'D♭': { major: ['D♭', 'E♭m', 'Fm', 'G♭', 'A♭', 'B♭m', 'Cdim'], minor: ['B♭m', 'Cdim', 'D♭', 'E♭m', 'Fm', 'G♭', 'A♭'] },
+                'A♭': { major: ['A♭', 'B♭m', 'Cm', 'D♭', 'E♭', 'Fm', 'Gdim'], minor: ['Fm', 'Gdim', 'A♭', 'B♭m', 'Cm', 'D♭', 'E♭'] },
+                'E♭': { major: ['E♭', 'Fm', 'Gm', 'A♭', 'B♭', 'Cm', 'Ddim'], minor: ['Cm', 'Ddim', 'E♭', 'Fm', 'Gm', 'A♭', 'B♭'] },
+                'B♭': { major: ['B♭', 'Cm', 'Dm', 'E♭', 'F', 'Gm', 'Adim'], minor: ['Gm', 'Adim', 'B♭', 'Cm', 'Dm', 'E♭', 'F'] },
+                'F': { major: ['F', 'Gm', 'Am', 'B♭', 'C', 'Dm', 'Edim'], minor: ['Dm', 'Edim', 'F', 'Gm', 'Am', 'B♭', 'C'] }
             };
 
-            const detailedChordsForView = computed(() => {
+            const currentChords = computed(() => {
                 const root = selectedRootChord.value;
+                const labelsMajor = ['I','ii','iii','IV','V','vi','vii°'];
+                const labelsMinor = ['i','ii°','III','iv','v','VI','VII'];
                 if (isMajorChord.value) {
-                    return chordsData[root].major.slice(0, 7).map((name, i) => ({ roman: ['I','ii','iii','IV','V','vi','vii°'][i], name, type: i==0||i==3||i==4?'大三':'小三', notes: [name] }));
+                    return chordsData[root].major.map((name, i) => ({ roman: labelsMajor[i], name, type: i==0||i==3||i==4?'大三':'小三', notes: [name] }));
                 } else {
-                    return chordsData[root].minor.slice(0, 7).map((name, i) => ({ roman: ['i','ii°','III','iv','v','VI','VII'][i], name, type: i==2||i==5||i==6?'大三':'小三', notes: [name] }));
+                    return chordsData[root].minor.map((name, i) => ({ roman: labelsMinor[i], name, type: i==2||i==5||i==6?'大三':'小三', notes: [name] }));
                 }
             });
 
-            // --- 3. 智慧同音異名轉換引擎 ---
-            const enharmonicPairs = [
-                ['c#', 'db'], ['d#', 'eb'], ['f#', 'gb'], ['g#', 'ab'], ['a#', 'bb'], ['e#', 'f'], ['b#', 'c']
-            ];
-
-            const getEnharmonicAlternatives = (chordStr) => {
-                let cleanChord = chordStr.trim();
-                let match = cleanChord.match(/^([A-G][#♭b]?)(.*)$/i);
-                if (!match) return [cleanChord];
-                let root = match[1].toLowerCase().replace('♭', 'b');
-                let suffix = match[2];
-
-                let alts = [cleanChord];
-                enharmonicPairs.forEach(pair => {
-                    if (pair[0] === root) {
-                        let r = pair[1].length > 1 ? pair[1].charAt(0).toUpperCase() + pair[1].charAt(1) : pair[1].toUpperCase();
-                        alts.push(r + suffix);
-                    } else if (pair[1] === root) {
-                        let r = pair[0].length > 1 ? pair[0].charAt(0).toUpperCase() + pair[0].charAt(1) : pair[0].toUpperCase();
-                        alts.push(r + suffix);
-                    }
-                });
-                return alts;
-            };
-
-            const userInputChords = ref('');
-            const cleanedInputChords = computed(() => {
-                if (!userInputChords.value) return [];
-                return userInputChords.value.split(',').map(c => c.trim()).filter(c => c.length > 0);
-            });
-
-            // 🛠️ 精準全等核對：輸入什麼，背景字典就必須有什麼，杜絕 includes 造成的誤傷
-            const isStrictMatch = (userChord, diatonicList) => {
-                let allowedVariants = getEnharmonicAlternatives(userChord).map(c => c.toLowerCase());
-                return diatonicList.some(dChord => allowedVariants.includes(dChord.toLowerCase()));
-            };
-
-            // --- 🛠️ 絕對排除法核心邏輯（修復 A、Am 同步通過 Bug） ---
-            const detectedKeys = computed(() => {
-                const inputs = cleanedInputChords.value;
-                if (inputs.length === 0) return [];
-
-                let results = [];
-
-                for (let root in chordsData) {
-                    // 1. 驗證大調
-                    let majorList = chordsData[root].major;
-                    let allMajorMatch = true;
-                    inputs.forEach(chord => {
-                        if (!isStrictMatch(chord, majorList)) {
-                            allMajorMatch = false; // 有一個不配，立刻出局
-                        }
-                    });
-                    if (allMajorMatch) {
-                        results.push({ keyName: `${root} 大調 (Major)`, isMajor: true, matched: inputs });
-                    }
-
-                    // 2. 驗證小調
-                    let minorList = chordsData[root].minor;
-                    let allMinorMatch = true;
-                    inputs.forEach(chord => {
-                        if (!isStrictMatch(chord, minorList)) {
-                            allMinorMatch = false; // 出局
-                        }
-                    });
-                    if (allMinorMatch) {
-                        results.push({ keyName: `${root} 自然小調 (Minor)`, isMajor: false, matched: inputs });
-                    }
-                }
-
-                return results;
-            });
-
-            // --- 4. 拍子機核心邏輯 ---
+            // --- 3. 拍子機核心邏輯 ---
             const bpm = ref(120); const isPlaying = ref(false); const timeSignature = ref('4/4'); const currentBeat = ref(0);
             let audioCtx = null; let timerId = null; let nextNoteTime = 0.0;
             const lookahead = 25.0; const scheduleAheadTime = 0.1;
@@ -355,8 +210,7 @@
 
             return {
                 currentTab, changeTab, keysCircle, selectedKey, getCirclePosition,
-                rootNotes, selectedRootChord, isMajorChord, detailedChordsForView,
-                userInputChords, cleanedInputChords, detectedKeys,
+                rootNotes, selectedRootChord, isMajorChord, currentChords,
                 bpm, isPlaying, timeSignature, currentBeat, beatsPerMeasure, adjustBpm, changeTimeSignature, toggleMetronome
             };
         }
