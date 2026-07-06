@@ -81,9 +81,9 @@
         <div v-if="currentTab === 'detector'">
             <section class="mb-4">
                 <label class="text-xs font-bold text-gray-500 block mb-1.5">請輸入歌譜中的和弦 (用英文逗號隔開)：</label>
-                <input type="text" v-model="userInputChords" placeholder="例如: F#m, C#, Bb, Ebm" 
+                <input type="text" v-model="userInputChords" placeholder="例如: A, E, C#, D#" 
                        class="w-full p-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm shadow-sm transition-all" />
-                <p class="text-[11px] text-gray-400 mt-1">💡 支援格式：C, Dm, F#m, G7, Bb, Csus4, Gdim...</p>
+                <p class="text-[11px] text-gray-400 mt-1">💡 支援同音異名智慧比對 (如 C# / D♭ 自動互通)</p>
             </section>
 
             <section>
@@ -135,9 +135,9 @@
 
     createApp({
         setup() {
-            const currentTab = ref('circle');
+            const currentTab = ref('detector'); // 預設直接開在定調工具方便測試
 
-            // --- 基礎調性與和弦數據庫 ---
+            // --- 五度圈與基本資料 ---
             const keysCircle = [
                 { major: 'C', minor: 'A', signature: '無升降記號', majorScale: ['C', 'D', 'E', 'F', 'G', 'A', 'B'], minorScale: ['A', 'B', 'C', 'D', 'E', 'F', 'G'] },
                 { major: 'G', minor: 'E', signature: '1 個升號 (#F)', majorScale: ['G', 'A', 'B', 'C', 'D', 'E', 'F#'], minorScale: ['E', 'F#', 'G', 'A', 'B', 'C', 'D'] },
@@ -164,7 +164,7 @@
             const selectedRootChord = ref('C');
             const isMajorChord = ref(true);
 
-            // 核心大數據庫（支援 12 個調各自的常用順階和弦名）
+            // 核心大數據庫
             const chordsData = {
                 'C': {
                     major: ['C', 'Dm', 'Em', 'F', 'G', 'Am', 'Bdim', 'Cmaj7', 'Dm7', 'Em7', 'Fmaj7', 'G7', 'Am7', 'Bm7b5'],
@@ -195,31 +195,29 @@
                     minor: ['F#m', 'G#dim', 'A', 'Bm', 'C#m', 'D', 'E', 'F#m7', 'G#m7b5', 'Amaj7', 'Bm7', 'C#m7', 'Dmaj7', 'E7']
                 },
                 'D♭': {
-                    major: ['D♭', 'E♭m', 'Fm', 'G♭', 'A♭', 'B♭m', 'Cdim', 'D♭maj7', 'E♭m7', 'Fm7', 'G♭maj7', 'A♭7', 'B♭m7', 'Cm7b5', 'C#', 'D#m', 'Fm', 'F#', 'G#', 'A#m'],
-                    minor: ['C#m', 'D#dim', 'E', 'F#m', 'G#m', 'A', 'B', 'C#m7', 'D#m7b5', 'Emaj7', 'F#m7', 'G#m7', 'Amaj7', 'B7', 'Bbm', 'Cdim', 'Db', 'Ebm', 'Fm', 'Gb', 'Ab']
+                    major: ['D♭', 'E♭m', 'Fm', 'G♭', 'A♭', 'B♭m', 'Cdim', 'D♭maj7', 'E♭m7', 'Fm7', 'G♭maj7', 'A♭7', 'B♭m7', 'Cm7b5'],
+                    minor: ['B♭m', 'Cdim', 'D♭', 'E♭m', 'Fm', 'G♭', 'A♭', 'B♭m7', 'Cm7b5', 'D♭maj7', 'E♭m7', 'Fm7', 'G♭maj7', 'A♭7']
                 },
                 'A♭': {
-                    major: ['A♭', 'B♭m', 'Cm', 'D♭', 'E♭', 'Fm', 'Gdim', 'A♭maj7', 'B♭m7', 'Cm7', 'D♭maj7', 'E♭7', 'Fm7', 'Gm7b5', 'G#', 'A#m', 'Cm', 'C#', 'D#', 'Fm'],
-                    minor: ['G#m', 'A#dim', 'B', 'C#m', 'D#m', 'E', 'F#', 'G#m7', 'A#m7b5', 'Bmaj7', 'C#m7', 'D#m7', 'Emaj7', 'F#7', 'Fm', 'Gdim', 'Ab', 'Bbm', 'Cm', 'Db', 'Eb']
+                    major: ['A♭', 'B♭m', 'Cm', 'D♭', 'E♭', 'Fm', 'Gdim', 'A♭maj7', 'B♭m7', 'Cm7', 'D♭maj7', 'E♭7', 'Fm7', 'Gm7b5'],
+                    minor: ['Fm', 'Gdim', 'A♭', 'B♭m', 'Cm', 'D♭', 'E♭', 'Fm7', 'Gdim7b5', 'A♭maj7', 'B♭m7', 'Cm7', 'D♭maj7', 'E♭7']
                 },
                 'E♭': {
-                    major: ['E♭', 'Fm', 'Gm', 'A♭', 'B♭', 'Cm', 'Ddim', 'E♭maj7', 'Fm7', 'Gm7', 'A♭maj7', 'B♭7', 'Cm7', 'Dm7b5', 'D#', 'Fm', 'Gm', 'G#', 'A#', 'Cm'],
-                    minor: ['Cm', 'Ddim', 'E♭', 'Fm', 'Gm', 'A♭', 'B♭', 'Cm7', 'Dm7b5', 'E♭maj7', 'Fm7', 'Gm7', 'A♭maj7', 'B♭7', 'D#m', 'Fm']
+                    major: ['E♭', 'Fm', 'Gm', 'A♭', 'B♭', 'Cm', 'Ddim', 'E♭maj7', 'Fm7', 'Gm7', 'A♭maj7', 'B♭7', 'Cm7', 'Dm7b5'],
+                    minor: ['Cm', 'Ddim', 'E♭', 'Fm', 'Gm', 'A♭', 'B♭', 'Cm7', 'Dm7b5', 'E♭maj7', 'Fm7', 'Gm7', 'A♭maj7', 'B♭7']
                 },
                 'B♭': {
-                    major: ['B♭', 'Cm', 'Dm', 'E♭', 'F', 'Gm', 'Adim', 'B♭maj7', 'Cm7', 'Dm7', 'E♭maj7', 'F7', 'Gm7', 'Am7b5', 'A#', 'Cm', 'Dm', 'D#', 'F', 'Gm'],
-                    minor: ['Gm', 'Adim', 'B♭', 'Cm', 'Dm', 'E♭', 'F', 'Gm7', 'Am7b5', 'B♭maj7', 'Cm7', 'Dm7', 'E♭maj7', 'F7', 'A#m']
+                    major: ['B♭', 'Cm', 'Dm', 'E♭', 'F', 'Gm', 'Adim', 'B♭maj7', 'Cm7', 'Dm7', 'E♭maj7', 'F7', 'Gm7', 'Am7b5'],
+                    minor: ['Gm', 'Adim', 'B♭', 'Cm', 'Dm', 'E♭', 'F', 'Gm7', 'Am7b5', 'B♭maj7', 'Cm7', 'Dm7', 'E♭maj7', 'F7']
                 },
                 'F': {
-                    major: ['F', 'Gm', 'Am', 'B♭', 'C', 'Dm', 'Edim', 'Fmaj7', 'Gm7', 'Am7', 'B♭maj7', 'C7', 'Dm7', 'Em7b5', 'F', 'Gm', 'Am', 'A#', 'C', 'Dm'],
+                    major: ['F', 'Gm', 'Am', 'B♭', 'C', 'Dm', 'Edim', 'Fmaj7', 'Gm7', 'Am7', 'B♭maj7', 'C7', 'Dm7', 'Em7b5'],
                     minor: ['Dm', 'Edim', 'F', 'Gm', 'Am', 'B♭', 'C', 'Dm7', 'Em7b5', 'Fmaj7', 'Gm7', 'Am7', 'B♭maj7', 'C7']
                 }
             };
 
-            // 為了畫面上「順階和弦」分頁可以顯示詳細資訊（保留原有功能）
             const detailedChordsForView = computed(() => {
                 const root = selectedRootChord.value;
-                const parseNotes = (arr) => arr.map(n => ({ roman: '—', name: n, type: '和弦', notes: [n] }));
                 if (isMajorChord.value) {
                     return chordsData[root].major.slice(0, 7).map((name, i) => ({ roman: ['I','ii','iii','IV','V','vi','vii°'][i], name, type: i==0||i==3||i==4?'大三':'小三', notes: [name] }));
                 } else {
@@ -227,35 +225,61 @@
                 }
             });
 
-            // --- 🌟 逆向調性分析邏輯 ---
+            // --- 🌟 智慧同音異名映射表 (Enharmonic Mapping) 🌟 ---
+            const enharmonicMap = {
+                'c#': 'db', 'db': 'c#',
+                'd#': 'eb', 'eb': 'd#',
+                'f#': 'gb', 'gb': 'f#',
+                'g#': 'ab', 'ab': 'g#',
+                'a#': 'bb', 'bb': 'a#',
+                'e#': 'f',  'f': 'e#',
+                'b#': 'c',  'c': 'b#'
+            };
+
+            // 輔助函式：將和弦中的根音做對調轉換 (例如 C#m -> Dbm)
+            const getEnharmonicChord = (chordStr) => {
+                let match = chordStr.match(/^([A-G][#♭b]?)(.*)$/i);
+                if (!match) return chordStr;
+                let root = match[1].toLowerCase().replace('♭', 'b');
+                let suffix = match[2];
+                if (enharmonicMap[root]) {
+                    // 轉回原本的大小寫格式
+                    let newRoot = enharmonicMap[root];
+                    newRoot = newRoot.length > 1 ? newRoot.charAt(0).toUpperCase() + newRoot.charAt(1) : newRoot.toUpperCase();
+                    return newRoot + suffix;
+                }
+                return chordStr;
+            };
+
             const userInputChords = ref('');
             
-            // 清理用戶輸入，變成乾淨的 Array
             const cleanedInputChords = computed(() => {
                 if (!userInputChords.value) return [];
-                return userInputChords.value
-                    .split(',')
-                    .map(c => c.trim())
-                    .filter(c => c.length > 0);
+                return userInputChords.value.split(',').map(c => c.trim()).filter(c => c.length > 0);
             });
 
-            // 計算出所有調性的契合度百分比
+            // 核心判定運算
             const detectedKeys = computed(() => {
                 const inputs = cleanedInputChords.value;
                 if (inputs.length === 0) return [];
 
                 let results = [];
 
-                // 遍歷 12 個根音
+                // 檢查每一個調
                 for (let root in chordsData) {
-                    // 1. 測試大調
+                    // --- 1. 大調判定 ---
                     let majorChords = chordsData[root].major;
                     let matchedMajor = [];
                     let unmatchedMajor = [];
                     
                     inputs.forEach(chord => {
-                        // 模糊比對：將和弦名稱轉化，例如簡化 sus4 或 b5 來進行順階匹配
-                        let isMatch = majorChords.some(mc => mc.toLowerCase() === chord.toLowerCase() || chord.toLowerCase().includes(mc.toLowerCase()));
+                        let chordAlt = getEnharmonicChord(chord); // 取得同音異名
+                        let isMatch = majorChords.some(mc => 
+                            mc.toLowerCase() === chord.toLowerCase() || 
+                            mc.toLowerCase() === chordAlt.toLowerCase() ||
+                            chord.toLowerCase().includes(mc.toLowerCase()) ||
+                            chordAlt.toLowerCase().includes(mc.toLowerCase())
+                        );
                         if (isMatch) matchedMajor.push(chord);
                         else unmatchedMajor.push(chord);
                     });
@@ -263,21 +287,24 @@
                     let majorPercentage = Math.round((matchedMajor.length / inputs.length) * 100);
                     if (majorPercentage > 0) {
                         results.push({
-                            keyName: `${root} 大調 (Major)`,
-                            isMajor: true,
-                            matchPercentage: majorPercentage,
-                            matched: matchedMajor,
-                            unmatched: unmatchedMajor
+                            keyName: `${root} 大調 (Major)`, isMajor: true, matchPercentage: majorPercentage,
+                            matched: matchedMajor, unmatched: unmatchedMajor
                         });
                     }
 
-                    // 2. 測試小調
+                    // --- 2. 小調判定 ---
                     let minorChords = chordsData[root].minor;
                     let matchedMinor = [];
                     let unmatchedMinor = [];
                     
                     inputs.forEach(chord => {
-                        let isMatch = minorChords.some(mic => mic.toLowerCase() === chord.toLowerCase() || chord.toLowerCase().includes(mic.toLowerCase()));
+                        let chordAlt = getEnharmonicChord(chord);
+                        let isMatch = minorChords.some(mic => 
+                            mic.toLowerCase() === chord.toLowerCase() || 
+                            mic.toLowerCase() === chordAlt.toLowerCase() ||
+                            chord.toLowerCase().includes(mic.toLowerCase()) ||
+                            chordAlt.toLowerCase().includes(mic.toLowerCase())
+                        );
                         if (isMatch) matchedMinor.push(chord);
                         else unmatchedMinor.push(chord);
                     });
@@ -285,31 +312,20 @@
                     let minorPercentage = Math.round((matchedMinor.length / inputs.length) * 100);
                     if (minorPercentage > 0) {
                         results.push({
-                            keyName: `${root} 自然小調 (Minor)`,
-                            isMajor: false,
-                            matchPercentage: minorPercentage,
-                            matched: matchedMinor,
-                            unmatched: unmatchedMinor
+                            keyName: `${root} 自然小調 (Minor)`, isMajor: false, matchPercentage: minorPercentage,
+                            matched: matchedMinor, unmatched: unmatchedMinor
                         });
                     }
                 }
 
-                // 排序：契合度由高到低，如果百分比一樣，符合和弦多的在前面
+                // 照百分比與符合數自動排序
                 return results.sort((a, b) => b.matchPercentage - a.matchPercentage);
             });
 
             return {
-                currentTab,
-                keysCircle,
-                selectedKey,
-                getCirclePosition,
-                rootNotes,
-                selectedRootChord,
-                isMajorChord,
-                currentChords: detailedChordsForView,
-                userInputChords,
-                cleanedInputChords,
-                detectedKeys
+                currentTab, keysCircle, selectedKey, getCirclePosition,
+                rootNotes, selectedRootChord, isMajorChord, currentChords: detailedChordsForView,
+                userInputChords, cleanedInputChords, detectedKeys
             };
         }
     }).mount('#app');
